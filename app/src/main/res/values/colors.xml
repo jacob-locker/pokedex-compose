@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="typeBug">#FFA8B820</color>
+    <color name="typeBugLight">#FFC6D16E</color>
+    <color name="typeBugDark">#FF6D7815</color>
+
+    <color name="typeDark">#FF705848</color>
+    <color name="typeDarkLight">#FFA29288</color>
+    <color name="typeDarkDark">#FF49392F</color>
+
+    <color name="typeDragon">#FF7038F8</color>
+    <color name="typeDragonLight">#FFA27DFA</color>
+    <color name="typeDragonDark">#FF4924A1</color>
+
+    <color name="typeElectric">#FFF8D030</color>
+    <color name="typeElectricLight">#FFFAE078</color>
+    <color name="typeElectricDark">#FFA1871F</color>
+
+    <color name="typeFairy">#FFEE99AC</color>
+    <color name="typeFairyLight">#FFF4BDC9</color>
+    <color name="typeFairyDark">#FF9B6470</color>
+
+    <color name="typeFighting">#FFC03028</color>
+    <color name="typeFightingLight">#FFD67873</color>
+    <color name="typeFightingDark">#FF7D1F1A</color>
+
+    <color name="typeFire">#FFF08030</color>
+    <color name="typeFireLight">#FFF5AC78</color>
+    <color name="typeFireDark">#FF9C531F</color>
+
+    <color name="typeFlying">#FFA890F0</color>
+    <color name="typeFlyingLight">#FFC6B7F5</color>
+    <color name="typeFlyingDark">#FF6D5E9C</color>
+
+    <color name="typeGhost">#FF705898</color>
+    <color name="typeGhostLight">#FFA292BC</color>
+    <color name="typeGhostDark">#FF493963</color>
+
+    <color name="typeGrass">#FF78C850</color>
+    <color name="typeGrassLight">#FFA7DB8D</color>
+    <color name="typeGrassDark">#FF4E8234</color>
+
+    <color name="typeGround">#FFE0C068</color>
+    <color name="typeGroundLight">#FFEBD69D</color>
+    <color name="typeGroundDark">#FF927D44</color>
+
+    <color name="typeIce">#FF98D8D8</color>
+    <color name="typeIceLight">#FFBCE6E6</color>
+    <color name="typeIceDark">#FF638D8D</color>
+
+    <color name="typeNormal">#FFA8A878</color>
+    <color name="typeNormalLight">#FFC6C6A7</color>
+    <color name="typeNormalDark">#FF6D6D4E</color>
+
+    <color name="typePoison">#FFA040A0</color>
+    <color name="typePoisonLight">#FFC183C1</color>
+    <color name="typePoisonDark">#FF682A68</color>
+
+    <color name="typePsychic">#FFF85888</color>
+    <color name="typePsychicLight">#FFFA92B2</color>
+    <color name="typePsychicDark">#FFA13959</color>
+
+    <color name="typeRock">#FFB8A038</color>
+    <color name="typeRockLight">#FFD1C17D</color>
+    <color name="typeRockDark">#FF786824</color>
+
+    <color name="typeSteel">#FFB8B8D0</color>
+    <color name="typeSteelLight">#FFD1D1E0</color>
+    <color name="typeSteelDark">#FF787887</color>
+
+    <color name="typeWater">#FF6890F0</color>
+    <color name="typeWaterLight">#FF9DB7F5</color>
+    <color name="typeWaterDark">#FF445E9C</color>
+</resources>
