@@ -22,7 +22,7 @@ class PokemonPagingSourceTest {
     @Test
     fun testSourceFlow() = runBlocking {
         val startTimeMillis = System.currentTimeMillis()
-        PokemonPagingSource(FakePokeWebService()).load(
+        PokemonSearchSource(FakePokeWebService(), "", mutableMapOf()).load(
             PagingSource.LoadParams.Refresh(
                 key = 0,
                 loadSize = FakePokeWebService.ALL_POKEMON.pokemonReferences.size,

@@ -18,7 +18,7 @@ class FakePokeWebService(private val config: Config = Config()) : PokeWebService
                       val pokemonDelayMillis: Long = 2000)
 
     companion object {
-        val ALL_POKEMON: AllPokemonResponse = AllPokemonResponse(
+        val ALL_POKEMON: AllPokemonResponse = AllPokemonResponse(0, null, null,
             listOf(
                 PokemonReference(
                     "bulbasaur",

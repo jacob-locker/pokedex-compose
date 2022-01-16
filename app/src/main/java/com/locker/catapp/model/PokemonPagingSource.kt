@@ -2,11 +2,9 @@ package com.locker.catapp.model
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.locker.catapp.model.retrieveAllPokemon
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
-class PokemonPagingSource(private val service: PokeWebService) : PagingSource<Int, Pokemon>() {
+class PokemonPagingSource(private val service: PokeWebService,
+                          private val cache: MutableMap<String, Pokemon>) : PagingSource<Int, Pokemon>() {
 
     companion object {
         private const val START_PAGE = 0
@@ -20,9 +18,9 @@ class PokemonPagingSource(private val service: PokeWebService) : PagingSource<In
         val pageSize = params.loadSize ?: PAGE_SIZE
 
         return try {
-            allPokemon = mutableListOf<Pokemon>()
+            allPokemon = mutableListOf()
             val allPokemonResponse = service.fetchAllPokemon(page, pageSize)
-            retrieveAllPokemon(service, allPokemonResponse) { allPokemon.add(it) }
+            retrieveAllPokemon(service, allPokemonResponse, pokeCache = cache) { allPokemon.add(it) }
 
             LoadResult.Page(
                 data = allPokemon.sortedBy { it.order },

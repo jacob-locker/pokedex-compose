@@ -10,6 +10,14 @@ data class Sprites(
     @SerializedName("front_default") val frontDefaultUrl: String?,
     @SerializedName("front_female") val frontFemaleUrl: String,
     @SerializedName("front_shiny") val frontShinyUrl: String,
-    @SerializedName("front_shiny_female") val frontShinyFemaleUrl: String
-) {
-}
+    @SerializedName("front_shiny_female") val frontShinyFemaleUrl: String,
+    @SerializedName("other") val additionalSprites: AdditionalSprites?
+)
+
+data class AdditionalSprites(
+    @SerializedName("official-artwork") val artwork: OfficialArtwork?
+)
+
+data class OfficialArtwork(
+    @SerializedName("front_default") val frontDefaultUrl: String?
+)

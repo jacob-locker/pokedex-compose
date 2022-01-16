@@ -53,7 +53,9 @@ data class Pokemon(
             frontDefaultUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",
             frontFemaleUrl = "",
             frontShinyUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/1.png",
-            frontShinyFemaleUrl = ""),
+            frontShinyFemaleUrl = "",
+            additionalSprites = AdditionalSprites(OfficialArtwork("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png"))
+            ),
             types = listOf(
                 Type(
                     info = TypeInfo(

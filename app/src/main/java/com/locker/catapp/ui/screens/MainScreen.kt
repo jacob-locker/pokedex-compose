@@ -1,56 +1,56 @@
 package com.locker.catapp.ui.screens
 
-import android.content.Context
+import android.graphics.ComposeShader
+import android.graphics.PorterDuff
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.asFlow
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
-import coil.request.ImageRequest
-import coil.request.ImageResult
+import coil.size.OriginalSize
+import coil.size.Scale
+import coil.size.SizeResolver
 import coil.transform.CircleCropTransformation
 import com.locker.catapp.MainViewModel
-import com.locker.catapp.R
 import com.locker.catapp.model.Pokemon
-import com.locker.catapp.ui.AutoCompleteBox
+import com.locker.catapp.model.Type
 import com.locker.catapp.ui.theme.PokeAppTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 const val MAIN_SCREEN = "main"
+var IMAGE_SIZE = IntSize.Zero
 
 @ExperimentalAnimationApi
 @ExperimentalCoilApi
@@ -58,21 +58,73 @@ const val MAIN_SCREEN = "main"
 @ExperimentalFoundationApi
 @Composable
 fun MainScreen(viewModel: MainViewModel, onPokemonClicked: (Pokemon) -> Unit) {
-    val state =
-        viewModel.pokemonList.collectAsLazyPagingItems()
-    val searchState = viewModel.pokemonSearchLiveData.asFlow().collectAsLazyPagingItems()
-    MainScreen(viewModel, state, searchState, onPokemonClicked)
+    val searchState = viewModel.pokemonSearchFlow.collectAsLazyPagingItems()
+    val hasPokemonState = viewModel.hasPokemonFlow.collectAsState()
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        SearchView(viewModel = viewModel)
 
-    val loadingState = viewModel.isLoading.asFlow().collectAsState(initial = true)
-    LoadingScreen(loadingState.value)
+        val loading = rememberSaveable { mutableStateOf(false) }
+        if (searchState.loadState.refresh is LoadState.Loading) {
+            LaunchedEffect(SystemClock.elapsedRealtime()) {
+                delay(200)
+                loading.value = true
+            }
+        } else {
+            loading.value = false
+        }
+
+        AnimatedVisibility(visible = loading.value) {
+            LoadScreen()
+        }
+
+        AnimatedVisibility(
+            visible = !loading.value && searchState.loadState.refresh is LoadState.Error || !hasPokemonState.value) {
+            ErrorScreen(searchState.loadState.refresh , hasPokemonState.value)
+        }
+
+        AnimatedVisibility(
+            visible = !loading.value && hasPokemonState.value) {
+            MainScreen(
+                viewModel = viewModel,
+                searchState,
+                onPokemonClicked = onPokemonClicked
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchView(viewModel: MainViewModel) {
+    val text = rememberSaveable { mutableStateOf("") }
+    TextField(value = text.value,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
+        leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colors.primary) },
+        onValueChange = {
+            text.value = it
+            viewModel.searchPokemon(it)
+        }
+    )
+}
+
+@Composable
+fun ErrorScreen(errorState: LoadState, hasPokemonState: Boolean) {
+    val errorMsg = when {
+        errorState is LoadState.Error -> errorState.error.message.toString()
+        !hasPokemonState -> "Could not find that Pokemon!"
+        else -> "Something went wrong!"
+    }
+    Text(text = errorMsg)
 }
 
 @ExperimentalAnimationApi
 @Composable
-fun LoadingScreen(isLoading: Boolean) {
-    AnimatedVisibility(visible = isLoading) {
-        CircularProgressIndicator()
-    }
+fun LoadScreen() {
+    CircularProgressIndicator()
 }
 
 @ExperimentalAnimationApi
@@ -82,63 +134,19 @@ fun LoadingScreen(isLoading: Boolean) {
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
-    pokemonList: LazyPagingItems<Pokemon>,
     searchList: LazyPagingItems<Pokemon>,
     onPokemonClicked: (Pokemon) -> Unit
 ) {
-    val text = rememberSaveable { mutableStateOf("") }
-
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-            TextField(value = text.value,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
-                leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colors.primary) },
-                onValueChange = {
-                    text.value = it
-                    viewModel.searchPokemon(it)
-                }
-            )
-
-
-        AnimatedVisibility(visible = text.value.isNotEmpty()) {
-            LazyVerticalGrid(cells = GridCells.Fixed(2)) {
-                items(searchList.itemCount) {
-                    PokemonListItem(pokemon = searchList[it]!!)
-                }
-            }
-        }
-        AnimatedVisibility(visible = text.value.isEmpty()) {
-            LazyVerticalGrid(cells = GridCells.Fixed(2)) {
-                items(pokemonList.itemCount) {
-//            PokemonListItem(pokemon = pokemonList[it], onPokemonClicked)
-                    PokemonListItem(pokemon = pokemonList[it]!!)
-                }
-            }
+    LazyVerticalGrid(cells = GridCells.Fixed(2)) {
+        items(searchList.itemCount) {
+            BigPokemonListItem(pokemon = searchList[it]!!)
         }
     }
-//        TextField(value = text.value, onValueChange = {
-//            text.value = it
-//            viewModel.searchPokemon(it)
-//        } )
-
-}
-
-@Composable
-fun PokemonSearchItem(pokemon: Pokemon) {
-
 }
 
 @ExperimentalCoilApi
 @Composable
-fun PokemonListItem(
-    pokemon: Pokemon,
-    modifier: Modifier = Modifier
-) {
+fun BigPokemonListItem(pokemon: Pokemon) {
     Card(
         modifier = Modifier
             .padding(horizontal = 4.dp, vertical = 4.dp)
@@ -147,37 +155,29 @@ fun PokemonListItem(
         elevation = 4.dp
     ) {
         Box(
-            Modifier
-                .width(IntrinsicSize.Max)
-                .height(IntrinsicSize.Max)
+            Modifier.wrapContentSize()
         ) {
-
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            pokemon.types.toGradient(LocalContext.current),
-                            0F,
-                            500F
-                        )
-                    )
-            ) {}
             PokemonImage(
-                imageUrl = pokemon.sprites.frontDefaultUrl
+                imageUrl = pokemon.sprites.additionalSprites?.artwork?.frontDefaultUrl
                     ?: "https://static.wikia.nocookie.net/pokemontowerdefense/images/c/ce/Missingno_image.png/revision/latest?cb=20180809204127",
+                pokemon.types,
                 modifier = Modifier
-                    .size(128.dp)
-                    .align(Alignment.TopCenter)
-                    .padding(PaddingValues(bottom = 16.dp))
             )
             Text(
-                text = pokemon.name,
+                text = pokemon.name.capitalize(Locale.current),
+                color = Color.White,
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.BottomCenter),
                 style = MaterialTheme.typography.h6,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "#${pokemon.id}",
+                color = Color(red = 0x44, green = 0x44, blue = 0x44, alpha = 0x44),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
             )
         }
     }
@@ -187,85 +187,59 @@ fun PokemonListItem(
 @Composable
 fun PokemonImage(
     imageUrl: String,
+    pokemonTypes: List<Type>,
     modifier: Modifier = Modifier
 ) {
+    var sizeImage by remember { mutableStateOf(IntSize.Zero) }
+    val typeGradient = pokemonTypes.toGradient(LocalContext.current)
+    val gradient = Brush.verticalGradient(
+        colors = typeGradient
+            .applyAlphaGradient(listOf(0f, 0.9f, 1f)),
+        startY = sizeImage.height.toFloat() / 1.5f,  // 1/3
+        endY = sizeImage.height.toFloat()
+    )
+
     Box(
-        modifier = modifier
+        modifier = Modifier
+            .height(128.dp)
+            .fillMaxWidth()
+            .onGloballyPositioned { sizeImage = it.size }
+            .background(color = typeGradient[0])
     ) {
         val painter = rememberImagePainter(imageUrl, builder = {
             transformations(CircleCropTransformation())
+            scale(Scale.FIT)
         })
 
         Image(
             painter = painter,
             contentDescription = "Pokemon Appearance Image",
-            modifier = modifier
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxSize()
+                .padding(bottom = 0.dp),
+            contentScale = ContentScale.Fit
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(gradient)
+        ) {}
+
         if (painter.state is ImagePainter.State.Loading) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center))
         }
     }
 }
 
-//@Composable
-//fun SearchView(state: MutableState<TextFieldValue>) {
-//    TextField(
-//        value = state.value,
-//        onValueChange = { value ->
-//            state.value = value
-//        },
-//        modifier = Modifier
-//            .fillMaxWidth(),
-//        style = MaterialTheme.typography.h5,
-//        leadingIcon = {
-//            Icon(
-//                Icons.Default.Search,
-//                contentDescription = "",
-//                modifier = Modifier
-//                    .padding(15.dp)
-//                    .size(24.dp)
-//            )
-//        },
-//        trailingIcon = {
-//            if (state.value != TextFieldValue("")) {
-//                IconButton(
-//                    onClick = {
-//                        state.value =
-//                            TextFieldValue("") // Remove text from TextField when you press the 'X' icon
-//                    }
-//                ) {
-//                    Icon(
-//                        Icons.Default.Close,
-//                        contentDescription = "",
-//                        modifier = Modifier
-//                            .padding(15.dp)
-//                            .size(24.dp)
-//                    )
-//                }
-//            }
-//        },
-//        singleLine = true,
-//        shape = RectangleShape, // The TextFiled has rounded corners top left and right by default
-//        colors = TextFieldDefaults.textFieldColors(
-//            textColor = Color.White,
-//            cursorColor = Color.White,
-//            leadingIconColor = Color.White,
-//            trailingIconColor = Color.White,
-//            backgroundColor = colorResource(id = R.color.design_default_color_primary),
-//            focusedIndicatorColor = Color.Transparent,
-//            unfocusedIndicatorColor = Color.Transparent,
-//            disabledIndicatorColor = Color.Transparent
-//        )
-//    )
-//}
-
+@ExperimentalCoilApi
 @ExperimentalMaterialApi
 @Preview(showBackground = true)
 @Composable
 fun PreviewPokemonListItem() {
     PokeAppTheme {
         //PokemonListItem(pokemon = Pokemon.BULBASAUR, onPokemonClicked = {})
-        PokemonListItem(pokemon = Pokemon.BULBASAUR)
+        BigPokemonListItem(pokemon = Pokemon.BULBASAUR)
     }
 }

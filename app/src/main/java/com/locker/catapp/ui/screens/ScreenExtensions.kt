@@ -90,8 +90,17 @@ fun List<Type>.toGradient(context: Context) : List<Color> {
                 context.getColorExt(R.color.typeNormalDark))
     }
 
-    return if (context.isNightMode()) gradientList else gradientList.reversed()
+//    return if (context.isNightMode()) gradientList else gradientList.reversed()
+    return gradientList
 }
 
 fun Context.getColorExt(@ColorRes resId: Int) =
     Color(ResourcesCompat.getColor(resources, resId, theme))
+
+fun List<Color>.applyAlphaGradient(other: List<Float>): List<Color> {
+    require(this.size == other.size) { "Alpha gradient must be the same size." }
+
+    return List(size) {
+        this[it].copy(other[it], this[it].red, this[it].green, this[it].blue)
+    }
+}

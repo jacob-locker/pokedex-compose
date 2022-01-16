@@ -1,56 +1,54 @@
 package com.locker.catapp
 
+import android.os.SystemClock
 import androidx.lifecycle.*
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.locker.catapp.model.Pokemon
-import com.locker.catapp.model.PokeWebService
-import com.locker.catapp.model.PokemonPagingSource
-import com.locker.catapp.model.PokemonSearchSource
+import com.locker.catapp.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val pokeWebService: PokeWebService
+    private val pokeRepository: IPokeRepository
 ) : ViewModel() {
 
-    val pokemonList = Pager(PagingConfig(pageSize = 20)) {
-        PokemonPagingSource(pokeWebService)
-    }.flow.cachedIn(viewModelScope)
+    companion object {
+        const val MIN_LOAD_MILLIS = 300
+    }
 
-    val pokemonSearchLiveData: LiveData<PagingData<Pokemon>>
-    get() = _pokemonSearchLiveData
-    private val _pokemonSearchLiveData = MutableLiveData<PagingData<Pokemon>>()
+    val pokemonSearchFlow: StateFlow<PagingData<Pokemon>>
+        get() = _pokemonSearchFlow
+    private val _pokemonSearchFlow = MutableStateFlow<PagingData<Pokemon>>(PagingData.empty())
 
-    val isLoading: LiveData<Boolean>
-    get() = _isLoading
-    private val _isLoading = MutableLiveData<Boolean>()
+    val hasPokemonFlow: StateFlow<Boolean>
+        get() = _hasPokemonFlow
+    private val _hasPokemonFlow = MutableStateFlow(true)
 
     private var searchJob: Job? = null
 
-//    init {
-//        searchPokemon("")
-//    }
+    init {
+        searchPokemon("")
+    }
 
     fun searchPokemon(searchString: String) {
-        _isLoading.value = true
-        _pokemonSearchLiveData.value = PagingData.empty()
+//        _pokemonSearchFlow.value = PagingData.empty()
+        viewModelScope.launch(Dispatchers.IO) {
+            pokeRepository.hasPokemon(searchString).collectLatest {
+                _hasPokemonFlow.value = it
+            }
+        }
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            searchString.let { text ->
-                Pager(PagingConfig(pageSize = 10)) {
-                   PokemonSearchSource(pokeWebService, searchString = text)
-                }.flow.cachedIn(viewModelScope).collect {
-                    _isLoading.value = false
-                    _pokemonSearchLiveData.value = it
-                }
+        searchJob = viewModelScope.launch(Dispatchers.IO) {
+            pokeRepository.searchPokemon(searchString).cachedIn(viewModelScope).collectLatest {
+                _pokemonSearchFlow.value = it
             }
         }
     }
