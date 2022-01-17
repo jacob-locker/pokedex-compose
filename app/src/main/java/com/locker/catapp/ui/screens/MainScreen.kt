@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
@@ -177,8 +178,16 @@ fun BigPokemonListItem(pokemon: Pokemon) {
                 text = "#${pokemon.id}",
                 color = Color(red = 0x44, green = 0x44, blue = 0x44, alpha = 0x44),
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
             )
+            Column(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
+                for (type in pokemon.types) {
+                    Image(painter = painterResource(id = type.toSprite()),
+                        "Pokemon Type", modifier = Modifier.size(36.dp), contentScale = ContentScale.Crop)
+                }
+            }
         }
     }
 }
@@ -228,7 +237,9 @@ fun PokemonImage(
         ) {}
 
         if (painter.state is ImagePainter.State.Loading) {
-            CircularProgressIndicator(modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center))
+            CircularProgressIndicator(modifier = Modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.Center))
         }
     }
 }

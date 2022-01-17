@@ -1,5 +1,10 @@
 package com.locker.catapp
 
+import android.annotation.SuppressLint
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
+import android.content.Context
 import android.os.SystemClock
 import androidx.lifecycle.*
 import androidx.paging.Pager
@@ -8,6 +13,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.locker.catapp.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,10 +38,13 @@ class MainViewModel @Inject constructor(
         get() = _hasPokemonFlow
     private val _hasPokemonFlow = MutableStateFlow(true)
 
+    val retrievalProgress = pokeRepository.retrievalProgressFlow
+
     private var searchJob: Job? = null
 
     init {
         searchPokemon("")
+//        pokeRepository.downloadAllPokemon(viewModelScope) { searchPokemon("") }
     }
 
     fun searchPokemon(searchString: String) {

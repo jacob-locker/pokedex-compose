@@ -2,7 +2,9 @@ package com.locker.catapp.ui.screens
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.drawable.Drawable
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.res.ResourcesCompat
 import com.locker.catapp.R
@@ -92,6 +94,29 @@ fun List<Type>.toGradient(context: Context) : List<Color> {
 
 //    return if (context.isNightMode()) gradientList else gradientList.reversed()
     return gradientList
+}
+
+fun Type.toSprite() = when(info.name) {
+    "bug" -> R.drawable.bug
+    "dark" -> R.drawable.dark
+    "dragon" -> R.drawable.dragon
+    "electric" -> R.drawable.electric
+    "fairy" -> R.drawable.fairy
+    "fighting" -> R.drawable.fighting
+    "fire" -> R.drawable.fire
+    "flying" -> R.drawable.flying
+    "ghost" -> R.drawable.ghost
+    "grass" -> R.drawable.grass
+    "ground" -> R.drawable.ground
+    "ice" -> R.drawable.ice
+    "normal" -> R.drawable.normal
+    "poison" -> R.drawable.poison
+    "psychic" -> R.drawable.psychic
+    "rock" -> R.drawable.rock
+    "steel" -> R.drawable.steel
+    "water" -> R.drawable.water
+    else ->
+        R.drawable.normal
 }
 
 fun Context.getColorExt(@ColorRes resId: Int) =

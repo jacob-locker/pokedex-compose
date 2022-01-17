@@ -8,10 +8,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
-suspend fun retrieveAllPokemon(
-    pokeWebService: PokeWebService,
+suspend fun PokeWebService.retrieveAllPokemon(
     allPokemonResponse: AllPokemonResponse,
-    pokeCache: MutableMap<String, Pokemon> = mutableMapOf(),
+    pokeCache: IPokemonMemoryCache,
     pokemonRetrieved: suspend (Pokemon) -> Unit = {}
 ) =
     coroutineScope {
@@ -19,7 +18,7 @@ suspend fun retrieveAllPokemon(
         references.forEach { ref ->
             launch(Dispatchers.IO) {
                 try {
-                    val pokemon = if (ref.name in pokeCache) pokeCache[ref.name]!! else pokeWebService.fetchPokemon(ref.url)
+                    val pokemon = if (ref.name in pokeCache) pokeCache[ref.name]!! else fetchPokemon(ref.url)
                     pokeCache[ref.name] = pokemon
                     pokemonRetrieved(pokemon)
                 } catch (e: HttpException) {}

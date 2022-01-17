@@ -6,8 +6,7 @@ import androidx.paging.PagingState
 class PokemonSearchSource(
     private val service: PokeWebService,
     private val searchString: String,
-    private var cachedAllPokemonResponse: AllPokemonResponse?,
-    private val cache: MutableMap<String, Pokemon>
+    private val pokeMemoryCache: IPokemonMemoryCache
 ) : PagingSource<Int, Pokemon>() {
     companion object {
         const val SEARCH_STRING = ""
@@ -19,33 +18,33 @@ class PokemonSearchSource(
         val pageSize = params.loadSize ?: PAGE_SIZE
 
         return try {
-            if (cachedAllPokemonResponse == null) {
-                cachedAllPokemonResponse = service.fetchAllPokemon()
+            if (pokeMemoryCache.cachedAllPokemonResponse == null) {
+                pokeMemoryCache.cachedAllPokemonResponse = service.fetchAllPokemon()
             }
 
             val allFilteredPokemon =
-                cachedAllPokemonResponse!!.pokemonReferences.filterIndexed { index, pokemonReference ->
+                pokeMemoryCache.cachedAllPokemonResponse!!.pokemonReferences.filterIndexed { index, pokemonReference ->
                     searchString.isEmpty() || (index >= position && pokemonReference.name.startsWith(
                         searchString,
                         ignoreCase = true
                     ))
                 }
             val filteredPokemon = AllPokemonResponse(
-                cachedAllPokemonResponse!!.count,
-                cachedAllPokemonResponse!!.nextUrl,
-                cachedAllPokemonResponse!!.prevUrl,
+                pokeMemoryCache.cachedAllPokemonResponse!!.count,
+                pokeMemoryCache.cachedAllPokemonResponse!!.nextUrl,
+                pokeMemoryCache.cachedAllPokemonResponse!!.prevUrl,
                 allFilteredPokemon.subList(
                     position,
                     Math.min(allFilteredPokemon.size, position + pageSize)
                 )
             )
-            retrieveAllPokemon(service, filteredPokemon, pokeCache = cache)
+            service.retrieveAllPokemon(filteredPokemon, pokeCache = pokeMemoryCache)
 
             if (filteredPokemon.pokemonReferences.isEmpty()) {
                 LoadResult.Error(NoSuchPokemonException())
             } else {
                 LoadResult.Page(
-                    data = filteredPokemon.pokemonReferences.mapNotNull { cache[it.name] }.sortedBy { it.id },
+                    data = filteredPokemon.pokemonReferences.mapNotNull { pokeMemoryCache[it.name] }.sortedBy { it.id },
                     prevKey = if (position == 0) null else position - pageSize,
                     nextKey = if (position + pageSize >= allFilteredPokemon.size) null else position + pageSize
                 )
